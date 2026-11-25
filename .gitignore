@@ -1,0 +1,8 @@
+bin/
+*.out
+data/
+users.json
+.env
+web/node_modules/
+web/dist/*
+!web/dist/.gitkeep

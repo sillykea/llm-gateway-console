@@ -1,0 +1,26 @@
+# 1. Build the web app.
+FROM node:22-alpine AS web
+WORKDIR /web
+COPY web/package.json ./
+RUN npm install --no-audit --no-fund
+COPY web/ ./
+RUN npm run typecheck && npm run build
+
+# 2. Build the Go binary with the web app embedded.
+FROM golang:1.24-alpine AS build
+ARG VERSION=dev
+WORKDIR /src
+COPY go.mod ./
+COPY cmd ./cmd
+COPY internal ./internal
+COPY web/embed.go ./web/
+COPY --from=web /web/dist ./web/dist
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X main.version=${VERSION}" -o /console ./cmd/console
+
+# 3. Run as a non-root user on a distroless base: no shell, no package manager.
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=build /console /console
+ENV CONSOLE_DATA_DIR=/data CONSOLE_USERS_FILE=/etc/console/users.json
+EXPOSE 8090 8091
+USER nonroot
+ENTRYPOINT ["/console"]
