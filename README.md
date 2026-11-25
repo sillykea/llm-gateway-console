@@ -6,7 +6,7 @@ A web console for [llm-gateway](https://github.com/sillykea/llm-gateway): teams 
 
 Go API (standard library only) + React and TypeScript UI, embedded in one binary.
 
-![Overview page: spend this month, requests, error rate, cache hit rate, fallbacks, p95 latency, and charts of requests per hour and spend per day](docs/screenshots/overview.png)
+![Demo: signing in, the overview with spend and traffic, creating a key that is shown once, and revoking another](docs/demo.gif)
 
 ## What it does
 
