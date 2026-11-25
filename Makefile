@@ -4,7 +4,7 @@ VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 
 # Build the React app into web/dist, which the Go binary embeds.
 web:
-	cd web && npm install --no-audit --no-fund && npm run typecheck && npm run build
+	cd web && npm ci --no-audit --no-fund && npm run typecheck && npm run build
 
 build: web
 	CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" -o bin/console ./cmd/console
