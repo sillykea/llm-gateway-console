@@ -1,0 +1,1 @@
+Keeps this folder in git so go:embed compiles before the web app is built (make web).
