@@ -7,7 +7,7 @@ COPY web/ ./
 RUN npm run typecheck && npm run build
 
 # 2. Build the Go binary with the web app embedded.
-FROM golang:1.24-alpine AS build
+FROM golang:1.26-alpine AS build
 ARG VERSION=dev
 WORKDIR /src
 COPY go.mod ./
