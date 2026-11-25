@@ -1,6 +1,6 @@
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 
-.PHONY: web build test lint vuln e2e dev clean
+.PHONY: web build test lint vuln e2e dev clean demo demo-logs demo-down demo-reset
 
 # Build the React app into web/dist, which the Go binary embeds.
 web:
@@ -34,3 +34,20 @@ dev: build
 
 clean:
 	rm -rf bin web/dist/assets web/dist/index.html
+
+# The whole system on your laptop with fake models: console, gateway, Redis,
+# Prometheus and a traffic generator. Needs Docker.
+demo:
+	docker compose -f demo/compose.yaml up -d --build
+	@echo "Console:    http://localhost:8090  (admin / demo-admin-password)"
+	@echo "Prometheus: http://localhost:9090"
+
+demo-logs:
+	docker compose -f demo/compose.yaml logs -f traffic gateway
+
+demo-down:
+	docker compose -f demo/compose.yaml down
+
+# Also deletes the demo's keys and audit log.
+demo-reset:
+	docker compose -f demo/compose.yaml down -v

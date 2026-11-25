@@ -8,6 +8,27 @@ Go API (standard library only) + React and TypeScript UI, embedded in one binary
 
 ![Demo: signing in, the overview with spend and traffic, creating a key that is shown once, and revoking another](docs/demo.gif)
 
+## Try it in 2 minutes
+
+Needs Docker. Everything runs on your machine with fake models: no API keys, no GPU, no cloud account.
+
+```sh
+git clone https://github.com/sillykea/llm-gateway-console.git
+cd llm-gateway-console
+make demo
+```
+
+Open http://localhost:8090 and sign in as `admin` / `demo-admin-password` (or `viewer` / `demo-viewer-password`).
+
+The demo runs the console, [llm-gateway](https://github.com/sillykea/llm-gateway) built from its `v1.0.0` release, Redis, Prometheus, two mock models and a traffic generator. The generator creates a key for three teams through the console's API, then sends a few requests a second through the gateway. Within a minute you'll see:
+
+- **Spend per team**, counting up against each budget. `batch-jobs` runs out after a few minutes and starts getting `429`s.
+- **Cache hits** from repeated questions.
+- **Failovers:** the "cloud" mock fails 8% of requests, and the gateway retries them on the "local" one.
+- **Personal data kept local:** requests containing an email address only ever reach the local model.
+
+Create or revoke a key in the UI and the gateway follows within 5 seconds. `make demo-logs` shows the traffic, `make demo-down` stops everything, and `make demo-reset` also deletes the demo's keys. CI boots this same demo on every push and checks the numbers come through.
+
 ## What it does
 
 - **Overview.** Spend this month, requests, error rate, cache hit rate, failovers and p95 latency, spend per key and requests per model, with a warning when a provider's circuit breaker is open. Read from Prometheus, so the numbers cover every gateway replica and survive restarts.

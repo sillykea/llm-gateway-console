@@ -16,10 +16,14 @@ COPY internal ./internal
 COPY web/embed.go ./web/
 COPY --from=web /web/dist ./web/dist
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X main.version=${VERSION}" -o /console ./cmd/console
+# The data directory must exist and belong to the runtime user, so a volume
+# mounted there is writable (distroless has no shell to create it later).
+RUN mkdir -p /out/data
 
 # 3. Run as a non-root user on a distroless base: no shell, no package manager.
 FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=build /console /console
+COPY --from=build --chown=65532:65532 /out/data /data
 ENV CONSOLE_DATA_DIR=/data CONSOLE_USERS_FILE=/etc/console/users.json
 EXPOSE 8090 8091
 USER nonroot
