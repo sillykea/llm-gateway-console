@@ -1,0 +1,24 @@
+{
+  "listen": ":8080",
+  "providers": [
+    { "name": "cloud", "type": "openai", "base_url": "http://mock-cloud:8000", "timeout_seconds": 10 },
+    { "name": "local", "type": "openai", "base_url": "http://mock-local:8000", "local": true, "timeout_seconds": 10 }
+  ],
+  "models": {
+    "chat-default": [
+      { "provider": "cloud", "model": "gpt-4o-mini" },
+      { "provider": "local", "model": "llama3.1:8b" }
+    ],
+    "chat-private": [
+      { "provider": "local", "model": "llama3.1:8b" }
+    ]
+  },
+  "pii": { "mode": "route_local" },
+  "cache": { "backend": "redis", "redis_addr": "redis:6379", "ttl_seconds": 600 },
+  "limits": { "max_in_flight": 128, "breaker_threshold": 5, "breaker_cooldown_seconds": 20 },
+  "pricing": {
+    "gpt-4o-mini": { "input_per_1k": 0.01, "output_per_1k": 0.03 },
+    "llama3.1:8b": { "input_per_1k": 0.002, "output_per_1k": 0.006 }
+  },
+  "key_source": { "url": "http://console:8091/internal/keys", "token_env": "CONSOLE_SYNC_TOKEN", "refresh_seconds": 5 }
+}

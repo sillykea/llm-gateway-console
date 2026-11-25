@@ -1,0 +1,4 @@
+[
+  { "username": "admin", "role": "admin", "password_hash": "pbkdf2-sha256$600000$M+h5RaSOmQsLWGQ+Kc+MZA$YkC6wqfJMJ5TJEDm3Lj70ZNxOQm62yvwK7y30YrB1Qs" },
+  { "username": "viewer", "role": "viewer", "password_hash": "pbkdf2-sha256$600000$eUGWmjTSS+DdcFA75Edp1w$WebmaoOhPVt1K5DsRmTLMSurrLt1U27FBHqNizPO1sg" }
+]

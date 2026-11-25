@@ -1,0 +1,76 @@
+# One-command demo: `make demo`, then open http://localhost:8090
+# (admin / demo-admin-password). Everything runs locally with fake models:
+# no API keys, no GPU, no cloud account.
+#
+# The secrets below are for this local demo only.
+
+name: llm-gateway-demo
+
+x-demo-secrets: &secrets
+  CONSOLE_SYNC_TOKEN: demo-sync-token-demo-sync-token-demo
+
+services:
+  console:
+    build: { context: .., dockerfile: Dockerfile }
+    ports: ["8090:8090"]
+    environment:
+      <<: *secrets
+      CONSOLE_SESSION_SECRET: demo-session-secret-demo-session-secret
+      CONSOLE_INSECURE_COOKIES: "true"   # plain http on localhost
+      CONSOLE_USERS_FILE: /etc/console/users.json
+      PROMETHEUS_URL: http://prometheus:9090
+    volumes:
+      - ./users.json:/etc/console/users.json:ro
+      - console-data:/data
+    healthcheck:
+      test: ["CMD", "/console", "-healthcheck", "http://localhost:8090/healthz"]
+      interval: 3s
+      retries: 20
+
+  gateway:
+    # Built straight from the tagged gateway release.
+    build: https://github.com/sillykea/llm-gateway.git#v1.0.0
+    ports: ["8080:8080"]
+    environment:
+      <<: *secrets
+    volumes:
+      - ./gateway.json:/etc/gateway/gateway.json:ro
+    depends_on:
+      console: { condition: service_healthy }
+      redis: { condition: service_started }
+      mock-cloud: { condition: service_started }
+      mock-local: { condition: service_started }
+
+  mock-cloud:
+    build: { context: .., dockerfile: demo/Dockerfile, args: { APP: mockllm } }
+    environment: { NAME: cloud, LATENCY_MS: "400", FAIL_RATE: "0.08" }
+
+  mock-local:
+    build: { context: .., dockerfile: demo/Dockerfile, args: { APP: mockllm } }
+    environment: { NAME: local, LATENCY_MS: "700" }
+
+  traffic:
+    build: { context: .., dockerfile: demo/Dockerfile, args: { APP: traffic } }
+    environment:
+      CONSOLE_URL: http://console:8090
+      GATEWAY_URL: http://gateway:8080
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: demo-admin-password
+      RPS: "3"
+    volumes:
+      - traffic-state:/state
+    depends_on:
+      console: { condition: service_healthy }
+
+  redis:
+    image: redis:7-alpine
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    ports: ["9090:9090"]
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+volumes:
+  console-data:
+  traffic-state:
