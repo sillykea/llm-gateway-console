@@ -4,6 +4,8 @@
 //	console                  run the server (configured by environment)
 //	console hash-password    read a password on stdin, print its hash for the users file
 //	console -version         print the version
+//	console -healthcheck URL exit 0 if URL answers 200 (for container healthchecks:
+//	                         the image has no shell or curl)
 //
 // Environment:
 //
@@ -42,7 +44,11 @@ var version = "dev"
 
 func main() {
 	showVersion := flag.Bool("version", false, "print the version and exit")
+	healthcheck := flag.String("healthcheck", "", "check that this URL answers 200, then exit")
 	flag.Parse()
+	if *healthcheck != "" {
+		os.Exit(checkHealth(*healthcheck))
+	}
 	if *showVersion {
 		fmt.Println(version)
 		return
@@ -60,6 +66,21 @@ func main() {
 		log.Error("console stopped", "error", err)
 		os.Exit(1)
 	}
+}
+
+func checkHealth(url string) int {
+	c := &http.Client{Timeout: 3 * time.Second}
+	resp, err := c.Get(url)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		fmt.Fprintln(os.Stderr, "status", resp.StatusCode)
+		return 1
+	}
+	return 0
 }
 
 func hashPassword() error {
